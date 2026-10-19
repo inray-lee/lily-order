@@ -149,9 +149,10 @@ function render(cfg){
       </div>
       <div class="hint">${esc(feeText)}・距離本店 ${cfg.maxKm} 公里內</div>
       <div class="row">
-        <div><label class="f">日期</label><select id="date"><option value="">請選擇</option>${dates}</select></div>
+        <div><label class="f">日期</label><select id="date" onchange="refreshSlots()"><option value="">請選擇</option>${dates}</select></div>
         <div><label class="f" id="timeLabel">自取時間</label><select id="time"><option value="">請選擇</option>${slots}</select></div>
       </div>
+      <div class="hint" id="slotHint" style="display:none">外送每個時段只接一筆訂單，已被預訂的時段無法選擇</div>
       <div id="deliveryBox" class="hidden">
         <label class="f">外送地址</label>
         <div class="row" style="align-items:center">
@@ -243,7 +244,20 @@ function updateSum(){
   }
   $('sum').innerHTML=`共 ${t.q} 份${extra}<br><b>$${money(t.a+t.fee)}</b>`;
 }
+function refreshSlots(){
+  const sel=$('time'); if(!sel||!CFG) return;
+  const cur=sel.value;
+  const day=CFG.dates.find(x=>x.date===$('date').value);
+  const taken=(val('method')==='外送' && day) ? (day.taken||[]) : [];
+  sel.innerHTML='<option value="">請選擇</option>'+CFG.slots.map(t=>{
+    const full=taken.indexOf(t)!==-1;
+    return `<option value="${t}" ${full?'disabled':''}>${t}${full?'（外送已約滿）':''}</option>`;
+  }).join('');
+  if(cur && taken.indexOf(cur)===-1) sel.value=cur;
+  const h=$('slotHint'); if(h) h.style.display = val('method')==='外送' ? 'block' : 'none';
+}
 function onMethod(){
+  refreshSlots();
   syncSeg();
   const d=val('method')==='外送';
   $('deliveryBox').classList.toggle('hidden',!d);
@@ -291,6 +305,10 @@ function precheck(d){
   const day=CFG.dates.find(x=>x.date===d.date);
   if(day && day.remain<t.q) return '這天只剩 '+day.remain+' 份可訂';
   if(!d.time) return '請選擇時間';
+  if(d.method==='外送'){
+    const dd=CFG.dates.find(x=>x.date===d.date);
+    if(dd && (dd.taken||[]).indexOf(d.time)!==-1) return '這個時段已經有外送訂單了，請選其他時間';
+  }
   if(d.method==='外送'){
     if(t.blocked) return '外送需滿 '+money(CFG.freeThreshold)+' 元，未滿請改自取';
     if(d.address.length<6) return '請填寫完整外送地址';
