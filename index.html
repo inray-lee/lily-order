@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>莉莉水果店｜切盤訂購</title>
+<style>
+  :root{
+    --green:#2e7d32; --green-soft:#e8f5e9; --red:#c62828; --red-soft:#fdecea;
+    --ink:#1f2a1f; --muted:#6b756b; --line:#dfe6df; --bg:#f6f8f5; --card:#fff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+  header{background:var(--green);color:#fff;padding:18px 16px 16px}
+  header h1{margin:0;font-size:20px}
+  header p{margin:4px 0 0;font-size:13px;opacity:.9}
+  main{padding:12px 16px 120px;max-width:560px;margin:0 auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .card h2{font-size:15px;margin:0 0 10px;color:var(--green)}
+  .staff{background:#fff3e0;border:1px solid #ffcc80;color:#8a4b00;border-radius:10px;padding:8px 12px;font-size:14px;margin-bottom:12px}
+  .item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+  .item:first-of-type{border-top:0}
+  .item .name{font-weight:600}
+  .item .desc{font-size:13px;color:var(--muted)}
+  .stepper{display:flex;align-items:center;gap:6px}
+  .stepper button{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:20px;color:var(--green)}
+  .stepper input{width:52px;height:38px;text-align:center;font-size:17px;border:1px solid var(--line);border-radius:8px}
+  label.f{display:block;font-size:14px;color:var(--muted);margin:10px 0 4px}
+  input[type=text],input[type=tel],select,textarea{width:100%;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  textarea{min-height:64px;resize:vertical}
+  .seg{display:flex;gap:8px}
+  .seg label{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:10px 0;font-weight:600;background:#fff}
+  .seg input{display:none}
+  .seg label.on{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+  .check{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:15px}
+  .check input{width:20px;height:20px;margin-top:2px;flex:none}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+  .hint{font-size:13px;margin-top:6px;color:var(--muted)}
+  .hint.ok{color:var(--green)} .hint.bad{color:var(--red)}
+  .note{background:var(--green-soft);border-radius:10px;padding:10px 12px;font-size:14px}
+  .btn-line{border:1px solid var(--green);color:var(--green);background:#fff;border-radius:10px;padding:10px 12px;font-size:15px;white-space:nowrap}
+  .hidden{display:none!important}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  .bar .in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:12px}
+  .bar .sum{flex:1;font-size:14px;color:var(--muted)}
+  .bar .sum b{font-size:20px;color:var(--ink)}
+  .bar button{background:var(--green);color:#fff;border:0;border-radius:12px;padding:13px 22px;font-size:17px;font-weight:700}
+  .bar button:disabled{opacity:.5}
+  .err{background:var(--red-soft);color:var(--red);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:15px}
+  .done{text-align:center;padding:30px 10px}
+  .done .big{font-size:48px}
+  .done pre{text-align:left;white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;font:14px/1.6 inherit}
+  .loading{text-align:center;color:var(--muted);padding:40px 0}
+  .notice{max-width:560px;margin:12px auto 0;padding:0 16px}
+  .notice ol{margin:0;padding:12px 14px 12px 34px;background:#fff8e1;border:1px solid #ffe082;border-radius:14px;color:#5d4300;font-size:15px}
+  .notice li+li{margin-top:4px}
+  .prefill{background:var(--green-soft);color:var(--green);border-radius:10px;padding:8px 12px;font-size:14px;margin-bottom:12px;display:flex;justify-content:space-between;gap:8px}
+  .prefill a{color:var(--green);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">莉莉水果店｜切盤訂購</h1>
+</header>
+<section class="notice">
+  <ol>
+    <li>需提前預訂，不接受當日訂單，送出後由店員確認，會收到回覆通知。</li>
+    <li>每份會附水果叉一支。</li>
+  </ol>
+</section>
+
+<main id="app"><div class="loading">載入中…</div></main>
+
+<div class="bar hidden" id="bar">
+  <div class="in">
+    <div class="sum" id="sum">共 0 份<br><b>$0</b></div>
+    <button id="submit" onclick="submitForm()">送出訂單</button>
+  </div>
+</div>
+
+<script>
+/* ↓↓↓ 只要改這一行：貼上 Apps Script 部署後的 /exec 網址 ↓↓↓ */
+const API = 'https://script.google.com/macros/s/AKfycbyRcy9zwtwW_6HJ4DKzCVgJH7mo6awIjOoWsGKw27tcg3trWW0AUiCnai2WblrTs5z3wg/exec';
+/* ↑↑↑ ------------------------------------------------------ ↑↑↑ */
+
+const QS = new URLSearchParams(location.search);
+const AUTH = { t: QS.get('t') || '', k: QS.get('k') || '' };
+const VALID = !!(AUTH.t || AUTH.k);
+
+function apiGet(params){
+  const q = new URLSearchParams(Object.assign({ t: AUTH.t, k: AUTH.k }, params));
+  return fetch(API + '?' + q.toString()).then(r => r.json()).then(j => { if(!j.ok) throw new Error(j.error); return j.data; });
+}
+function apiPost(body){
+  return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) })
+    .then(r => r.json()).then(j => { if(!j.ok) throw new Error(j.error); return j.data; });
+}
+let CFG = null;
+const qty = {};
+let driveOk = null; // null=未查, true/false
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function $(id){return document.getElementById(id);}
+function val(name){const el=document.querySelector('[name="'+name+'"]:checked');return el?el.value:'';}
+function money(n){return Number(n||0).toLocaleString('en-US');}
+function errText(e){return String(e&&e.message||e).replace(/^(Exception|Error):\s*/,'');}
+
+function init(){
+  if(!VALID){
+    $('app').innerHTML='<div class="card">連結已過期或無效。<br>請回到 LINE 官方帳號，再點一次「會議水果餐盒」。</div>';
+    return;
+  }
+  apiGet({ api:'config' }).then(render).catch(e=>{
+    $('app').innerHTML='<div class="err">'+esc(errText(e))+'</div>';
+  });
+}
+
+function render(cfg){
+  CFG=cfg;
+  if(cfg.shopName){ $('title').textContent=cfg.shopName+'｜切盤訂購'; document.title=$('title').textContent; }
+  const items=cfg.items.map(i=>{qty[i.id]=0;return `
+    <div class="item">
+      <div><div class="name">${esc(i.name)}</div><div class="desc">每份 ${money(i.price)} 元${i.desc?'・'+esc(i.desc):''}</div></div>
+      <div class="stepper">
+        <button type="button" onclick="step('${i.id}',-1)">−</button>
+        <input type="number" inputmode="numeric" min="0" id="q_${i.id}" value="0" oninput="setQty('${i.id}',this.value)">
+        <button type="button" onclick="step('${i.id}',1)">＋</button>
+      </div>
+    </div>`;}).join('');
+
+  const dates=cfg.dates.map(d=>`<option value="${d.date}" ${d.remain<=0?'disabled':''}>${esc(d.label)}　${d.remain<=0?'已額滿':'剩 '+d.remain+' 份'}</option>`).join('');
+  const slots=cfg.slots.map(s=>`<option value="${s}">${s}</option>`).join('');
+  const feeText = cfg.feeUnderThreshold===null
+    ? `滿 ${money(cfg.freeThreshold)} 元可免費外送，未滿只能自取`
+    : `滿 ${money(cfg.freeThreshold)} 元免運，未滿運費 ${money(cfg.feeUnderThreshold)} 元`;
+
+  $('app').innerHTML=`
+    ${cfg.isStaff?'<div class="staff">店員代填模式（電話訂單）：送出後不會發 LINE 通知，請自行聯絡客人。</div>':''}
+    <div id="err" class="err hidden"></div>
+    ${cfg.last?'<div class="prefill" id="prefill"><span>已帶入您上次填寫的資料，請確認是否正確</span><a href="#" onclick="clearPrefill();return false;">清除</a></div>':''}
+
+    <div class="card"><h2>① 選擇切盤</h2>${items||'目前沒有可訂購的品項'}</div>
+
+    <div class="card"><h2>② 取貨方式與時間</h2>
+      <div class="seg">
+        <label><input type="radio" name="method" value="自取" checked onchange="onMethod()">自取</label>
+        <label><input type="radio" name="method" value="外送" onchange="onMethod()">外送</label>
+      </div>
+      <div class="hint">${esc(feeText)}・距離本店 ${cfg.maxKm} 公里內</div>
+      <div class="row">
+        <div><label class="f">日期</label><select id="date"><option value="">請選擇</option>${dates}</select></div>
+        <div><label class="f" id="timeLabel">自取時間</label><select id="time"><option value="">請選擇</option>${slots}</select></div>
+      </div>
+      <div id="deliveryBox" class="hidden">
+        <label class="f">外送地址</label>
+        <div class="row" style="align-items:center">
+          <input type="text" id="address" placeholder="縣市＋區＋路名＋門牌" onchange="driveOk=null;$('driveHint').textContent=''" style="flex:3">
+          <button type="button" class="btn-line" onclick="checkDrive()" style="flex:none">確認距離</button>
+        </div>
+        <div class="hint" id="driveHint"></div>
+        <div class="note" style="margin-top:10px">${esc(cfg.deliveryNote)}</div>
+        <label class="check"><input type="checkbox" id="ack">我已了解外送交貨方式</label>
+      </div>
+    </div>
+
+    <div class="card"><h2>③ 聯絡資料</h2>
+      <label class="f">訂購人</label><input type="text" id="name" autocomplete="name">
+      <label class="f">訂購人電話</label><input type="tel" id="phone" autocomplete="tel" placeholder="09xxxxxxxx">
+      <label class="check"><input type="checkbox" id="contactSame" checked onchange="$('contactBox').classList.toggle('hidden',this.checked)">聯絡人同訂購人</label>
+      <div id="contactBox" class="hidden">
+        <label class="f">聯絡人</label><input type="text" id="contact">
+        <label class="f">聯絡人電話</label><input type="tel" id="contactPhone">
+      </div>
+    </div>
+
+    <div class="card"><h2>④ 發票</h2>
+      <div class="seg">
+        <label><input type="radio" name="invoice" value="一般發票" checked onchange="onInvoice()">一般發票</label>
+        <label><input type="radio" name="invoice" value="統編" onchange="onInvoice()">打統編</label>
+      </div>
+      <div id="taxBox" class="hidden">
+        <label class="f">公司行號</label><input type="text" id="company">
+        <label class="f">統一編號</label><input type="tel" id="taxId" maxlength="8" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="card"><h2>⑤ 其他（選填）</h2>
+      <label class="f">用途</label>
+      <select id="purpose"><option value="">—</option><option>會議</option><option>拜拜</option><option>生日／慶生</option><option>活動</option><option>其他</option></select>
+      <label class="f">備註</label><textarea id="note" placeholder="例：不要奇異果、分裝成 2 盒"></textarea>
+    </div>
+  `;
+  $('bar').classList.remove('hidden');
+  if(cfg.last) fillLast(cfg.last);
+  syncSeg();
+  onMethod(); onInvoice();
+  updateSum();
+}
+
+function setRadio(name,v){ const el=document.querySelector('[name="'+name+'"][value="'+v+'"]'); if(el) el.checked=true; }
+function fillLast(L){
+  $('name').value=L.name||''; $('phone').value=L.phone||'';
+  $('contactSame').checked=!!L.contactSame;
+  $('contactBox').classList.toggle('hidden',!!L.contactSame);
+  if(!L.contactSame){ $('contact').value=L.contact||''; $('contactPhone').value=L.contactPhone||''; }
+  if(L.method) setRadio('method',L.method);
+  $('address').value=L.address||'';
+  if(L.invoice) setRadio('invoice',L.invoice);
+  $('company').value=L.company||''; $('taxId').value=L.taxId||'';
+  if(L.purpose) $('purpose').value=L.purpose;
+}
+function clearPrefill(){
+  ['name','phone','contact','contactPhone','address','company','taxId'].forEach(id=>$(id).value='');
+  $('contactSame').checked=true; $('contactBox').classList.add('hidden');
+  setRadio('method','自取'); setRadio('invoice','一般發票'); $('purpose').value='';
+  driveOk=null; $('driveHint').textContent='';
+  const p=$('prefill'); if(p) p.remove();
+  onMethod(); onInvoice();
+}
+
+function syncSeg(){document.querySelectorAll('.seg label').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));}
+function step(id,d){setQty(id,(qty[id]||0)+d);}
+function setQty(id,v){
+  let n=Math.max(0,Math.min(500,Math.floor(Number(v)||0)));
+  qty[id]=n; const el=$('q_'+id); if(el && String(el.value)!==String(n)) el.value=n;
+  updateSum();
+}
+function totals(){
+  let q=0,a=0; CFG.items.forEach(i=>{q+=qty[i.id]||0;a+=(qty[i.id]||0)*i.price;});
+  let fee=0, blocked=false;
+  if(val('method')==='外送' && a<CFG.freeThreshold){
+    if(CFG.feeUnderThreshold===null) blocked=true; else fee=CFG.feeUnderThreshold;
+  }
+  return {q,a,fee,blocked};
+}
+function updateSum(){
+  const t=totals();
+  let extra='';
+  if(val('method')==='外送'){
+    extra = t.blocked ? `<span style="color:var(--red)">　外送還差 ${money(CFG.freeThreshold-t.a)} 元</span>`
+          : (t.fee? `（含運費 ${money(t.fee)}）` : '（免運）');
+  }
+  $('sum').innerHTML=`共 ${t.q} 份${extra}<br><b>$${money(t.a+t.fee)}</b>`;
+}
+function onMethod(){
+  syncSeg();
+  const d=val('method')==='外送';
+  $('deliveryBox').classList.toggle('hidden',!d);
+  $('timeLabel').textContent=d?'外送到達時間':'自取時間';
+  updateSum();
+}
+function onInvoice(){ syncSeg(); $('taxBox').classList.toggle('hidden',val('invoice')!=='統編'); }
+
+function checkDrive(cb){
+  const addr=$('address').value.trim();
+  const h=$('driveHint'); h.className='hint'; h.textContent='查詢中…';
+  apiGet({ api:'check', addr: addr }).then(r=>{
+    driveOk=r.ok; h.className='hint '+(r.ok?'ok':'bad'); h.textContent=r.message;
+    if(cb) cb(r.ok);
+  }).catch(e=>{ h.className='hint bad'; h.textContent=errText(e); if(cb) cb(false); });
+}
+
+function validTaxId(id){
+  if(!/^\d{8}$/.test(id)) return false;
+  const w=[1,2,1,2,1,2,4,1]; let sum=0;
+  for(let i=0;i<8;i++){const p=Number(id[i])*w[i]; sum+=Math.floor(p/10)+p%10;}
+  return sum%5===0 || (id[6]==='7' && (sum+1)%5===0);
+}
+
+function showErr(msg){
+  const e=$('err'); e.textContent=msg; e.classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function collect(){
+  return {
+    items:Object.assign({},qty), method:val('method'), date:$('date').value, time:$('time').value,
+    address:$('address').value.trim(), ack:$('ack').checked,
+    name:$('name').value.trim(), phone:$('phone').value.trim(),
+    contactSame:$('contactSame').checked, contact:$('contact').value.trim(), contactPhone:$('contactPhone').value.trim(),
+    invoice:val('invoice'), company:$('company').value.trim(), taxId:$('taxId').value.trim(),
+    purpose:$('purpose').value, note:$('note').value.trim()
+  };
+}
+
+function precheck(d){
+  const t=totals();
+  if(t.q<=0) return '請至少選 1 份切盤';
+  if(!d.date) return '請選擇日期';
+  const day=CFG.dates.find(x=>x.date===d.date);
+  if(day && day.remain<t.q) return '這天只剩 '+day.remain+' 份可訂';
+  if(!d.time) return '請選擇時間';
+  if(d.method==='外送'){
+    if(t.blocked) return '外送需滿 '+money(CFG.freeThreshold)+' 元，未滿請改自取';
+    if(d.address.length<6) return '請填寫完整外送地址';
+    if(!d.ack) return '請勾選「我已了解外送交貨方式」';
+  }
+  if(!d.name) return '請填寫訂購人';
+  if(d.phone.replace(/\D/g,'').length<8) return '請填寫訂購人電話';
+  if(!d.contactSame){
+    if(!d.contact) return '請填寫聯絡人';
+    if(d.contactPhone.replace(/\D/g,'').length<8) return '請填寫聯絡人電話';
+  }
+  if(d.invoice==='統編'){
+    if(!d.company) return '請填寫公司行號';
+    if(!validTaxId(d.taxId)) return '統一編號不正確，請再確認';
+  }
+  return '';
+}
+
+function submitForm(){
+  $('err').classList.add('hidden');
+  const d=collect();
+  const msg=precheck(d);
+  if(msg) return showErr(msg);
+  if(d.method==='外送' && driveOk===null){
+    return checkDrive(ok=>{ if(ok) submitForm(); else showErr($('driveHint').textContent); });
+  }
+  if(d.method==='外送' && driveOk===false) return showErr($('driveHint').textContent);
+
+  const btn=$('submit'); btn.disabled=true; btn.textContent='送出中…';
+  apiPost({ api:'submit', auth: AUTH, data: d }).then(r=>{
+    $('bar').classList.add('hidden');
+    $('app').innerHTML=`<div class="done"><div class="big">🍉</div>
+      <h2>訂單已送出，等待店員確認</h2>
+      <p class="hint">${CFG.isStaff?'電話訂單已記錄，請自行回覆客人。':'店員確認後會用 LINE 通知您，請留意訊息。'}</p>
+      <pre>${esc(r.summary)}</pre>
+      <p class="hint">此頁可以關閉了。</p></div>`;
+    window.scrollTo(0,0);
+  }).catch(e=>{
+    btn.disabled=false; btn.textContent='送出訂單'; showErr(errText(e));
+  });
+}
+
+init();
+</script>
+</body>
+</html>
