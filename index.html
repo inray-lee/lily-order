@@ -193,8 +193,13 @@ function render(cfg){
       </div>
     </div>
 
-    <div class="card"><h2>⑤ 備註（選填）</h2>
-      <label class="f">備註</label><textarea id="note" placeholder="例：不要奇異果、分裝成 2 盒"></textarea>
+    <div class="card"><h2>⑤ 付款方式</h2>
+      <div class="seg"><label class="on" style="cursor:default">${esc(cfg.payment||'現金')}</label></div>
+      <div class="hint">目前僅接受${esc(cfg.payment||'現金')}付款，請於取貨或送達時支付</div>
+    </div>
+
+    <div class="card"><h2>⑥ 備註（選填）</h2>
+      <textarea id="note"></textarea>
     </div>
   `;
   $('bar').classList.remove('hidden');
@@ -224,7 +229,7 @@ function clearPrefill(){
   onMethod(); onInvoice();
 }
 
-function syncSeg(){document.querySelectorAll('.seg label').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));}
+function syncSeg(){document.querySelectorAll('.seg label').forEach(l=>{const i=l.querySelector('input'); if(i) l.classList.toggle('on',i.checked);});}
 function step(id,d){setQty(id,(qty[id]||0)+d);}
 function setQty(id,v){
   let n=Math.max(0,Math.min(500,Math.floor(Number(v)||0)));
